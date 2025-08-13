@@ -1,0 +1,150 @@
+import React, { useRef, useState, useEffect } from "react";
+ 
+export default function App() {
+
+  const [prompt, setPrompt] = useState("");
+
+  const [imageUrl, setImageUrl] = useState("");
+
+  const [imageBlob, setImageBlob] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+ 
+  useEffect(() => {
+
+    return () => {
+
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+
+    };
+
+  }, [imageUrl]);
+ 
+  async function generateImage() {
+
+    setLoading(true);
+
+    try {
+
+      const fetchUrl = prompt.trim()
+
+        ? `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
+
+        : `https://picsum.photos/1024/768`;
+
+      const res = await fetch(fetchUrl, { mode: "cors" });
+
+      if (!res.ok) throw new Error("Image fetch failed");
+
+      const blob = await res.blob();
+
+      const objUrl = URL.createObjectURL(blob);
+
+      setImageBlob(blob);
+
+      setImageUrl(objUrl);
+
+    } catch {
+
+      alert("Failed to generate image.");
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  }
+ 
+  function downloadPNG() {
+
+    if (imageBlob) {
+
+      const a = document.createElement("a");
+
+      const url = URL.createObjectURL(imageBlob);
+
+      a.href = url;
+
+      a.download = "generated-image.png";
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      a.remove();
+
+      URL.revokeObjectURL(url);
+
+    }
+
+  }
+ 
+  return (
+<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-200 via-pink-100 to-yellow-100 p-6">
+<div className="w-full max-w-4xl bg-white shadow-lg rounded-3xl p-8 space-y-6">
+<h1 className="text-3xl font-bold text-center text-indigo-700">AI Visual Content Generator</h1>
+<div className="flex flex-col sm:flex-row gap-4">
+<input
+
+            className="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+
+            placeholder="Describe your image..."
+
+            value={prompt}
+
+            onChange={(e) => setPrompt(e.target.value)}
+
+          />
+<button
+
+            className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium disabled:opacity-60"
+
+            onClick={generateImage}
+
+            disabled={loading}
+>
+
+            {loading ? "Generating..." : "Generate"}
+</button>
+<button
+
+            className="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-medium disabled:opacity-60"
+
+            onClick={downloadPNG}
+
+            disabled={!imageBlob}
+>
+
+            Download PNG
+</button>
+</div>
+<div className="flex flex-col space-y-4 bg-gray-50 rounded-xl p-4">
+<h2 className="text-lg font-semibold text-gray-700">Prompt Tips</h2>
+<ul className="list-disc list-inside text-gray-600 space-y-1">
+<li>Be specific about the scene, objects, and mood.</li>
+<li>Include styles like "oil painting" or "cyberpunk" for unique looks.</li>
+<li>Mention lighting or color tones for better results.</li>
+<li>Combine multiple concepts for creative images.</li>
+</ul>
+</div>
+<div className="flex justify-center">
+<div className="w-full bg-gray-50 rounded-xl shadow-inner p-3 flex items-center justify-center min-h-[300px]">
+
+            {imageUrl ? (
+<img src={imageUrl} alt="generated" className="max-w-full max-h-[480px] rounded-lg" crossOrigin="anonymous" />
+
+            ) : (
+<div className="text-gray-400">No image yet</div>
+
+            )}
+</div>
+</div>
+</div>
+</div>
+
+  );
+
+}
+
+ 
